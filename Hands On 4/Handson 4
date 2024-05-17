@@ -1,0 +1,60 @@
+import numpy as np
+
+class NearestNeighbors:
+    #Se usa un valor de vecinos(k) de 3
+    def __init__(self, neighbors=3):
+        self.neighbors = neighbors
+    def train(self, training_data, training_labels):
+        self.training_data = training_data
+        self.training_labels = training_labels
+    def classify(self, test_data):
+        results = []
+        #Cálculo de distancia euclidiana
+        for index, instance in enumerate(test_data):
+            distances = self._compute_distances(instance)
+            #Ordenamiento de índices de menor a mayor según sus distancias, se toman los primeros 3 debido al valor de k, que serían los más cercanos.
+            nearest_indices = np.argsort(distances)[:self.neighbors]
+            #Se obtienen los valores de clase correspondientes a las instancias más cercanas, usando el índice de estas.
+            nearest_labels = [self.training_labels[i] for i in nearest_indices]
+            #Se evalúa qué valor se repite más, y se asigna como predicciión
+            prediction = np.bincount(nearest_labels).argmax()
+            self._debug_output(index, instance, nearest_indices, nearest_labels, prediction)
+            results.append(prediction)
+        return results
+    def _compute_distances(self, instance):
+        return [np.linalg.norm(instance - training_instance) for training_instance in self.training_data]
+    def _debug_output(self, index, instance, nearest_indices, nearest_labels, prediction):
+        print(f"Predicción para muestra {index + 1}:")
+        print(f"  - Características de muestra: {instance}")
+        print(f"  - Índices de instancias más cercanas: {nearest_indices}")
+        print(f"  - Etiquetas de instancias más cercanas: {nearest_labels}")
+        print(f"  - Predicción final: {prediction}\n")
+# Ejecución
+if __name__ == "__main__":
+    #Datos de erntrenamiento (altura y peso, en cm y kg respectivamente)
+    training_data = np.array([
+        [170, 70], [180, 80], [160, 65], [175, 75], [165, 68],
+        [150, 55], [185, 85], [172, 73], [155, 60], [190, 90],
+        [168, 72], [163, 67], [188, 88], [174, 78], [200, 95],
+        [158, 63], [177, 83], [167, 71], [182, 87], [176, 77],
+        [140, 50], [145, 53], [135, 45], [152, 58], [142, 48],
+        [162, 64], [183, 86], [169, 74], [178, 82], [164, 66],
+    ])
+    #Valores de clase del conjunto de entrenamiento (edad en años)
+    training_labels = np.array([28, 33, 25, 36, 30,
+                                21, 41, 34, 22, 46,
+                                35, 27, 39, 31, 51,
+                                27, 40, 32, 44, 37,
+                                19, 23, 18, 26, 20,
+                                29, 42, 26, 39, 28])
+    #Datos de prieba
+    test_data = np.array([
+        [168, 72], [155, 63], [185, 88], [142, 52], [176, 80]
+    ])
+    #Entrenamiendo del algoritmo
+    classifier = NearestNeighbors(neighbors=3)
+    classifier.train(training_data, training_labels)
+    #Prueba
+    predictions = classifier.classify(test_data)
+    #Resultados
+    print("Predictions:", predictions)
